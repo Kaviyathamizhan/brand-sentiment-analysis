@@ -1,3 +1,5 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.12.1
@@ -14,5 +16,20 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.41.0
 pandas
+numpy
 huggingface-hub
 python-dotenv
+loguru
+apscheduler
+contractions
+emoji
+feedparser
+newsapi-python
+praw
+PyYAML
+SQLAlchemy
+scikit-learn
+torch
+transformers
+sentence-transformers
+bertopic
