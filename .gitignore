@@ -10,7 +10,7 @@ __pycache__/
 # Machine Learning & Data
 models/
 models 2/
-data/
+/data/
 *.h5
 *.pkl
 *.pt
