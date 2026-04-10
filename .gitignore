@@ -8,8 +8,8 @@ __pycache__/
 .venv/
 
 # Machine Learning & Data
-models/
-models 2/
+/models/
+/models 2/
 /data/
 *.h5
 *.pkl
