@@ -8,28 +8,35 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-# ─────────────────────────────────────────
-# Initialize FastAPI
-# ─────────────────────────────────────────
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Brand Sentiment API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    import logging
+    logger = logging.getLogger("uvicorn")
+    logger.info("Warming up ML pipelines into RAM...")
+    try:
+        from src.api.predict import _load_models
+        _load_models()
+        logger.info("Successfully loaded multi-gigabyte models.")
+    except Exception as e:
+        logger.error(f"CRITICAL: Failed to load models from disk/HuggingFace! {e}")
 
-# ─────────────────────────────────────────
-# Startup: Live Data Scheduler
-# ─────────────────────────────────────────
-
-@app.on_event("startup")
-def startup_event():
     try:
         from src.data.collector import Collector, start_scheduler
         collector = Collector()
         start_scheduler(collector)
     except Exception as e:
-        import logging
-        logging.getLogger("uvicorn").warning(
-            f"[Scheduler] Could not start live data collection: {e}. "
-            "The API will still work for manual text input."
-        )
+        logger.warning(f"[Scheduler] Could not start live data collection: {e}")
+
+    yield
+    logger.info("Shutting down API...")
+
+# ─────────────────────────────────────────
+# Initialize FastAPI
+# ─────────────────────────────────────────
+
+app = FastAPI(title="Brand Sentiment API", lifespan=lifespan)
 
 # ─────────────────────────────────────────
 # CORS

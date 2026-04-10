@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMetrics, getBrands, getAlerts } from "../services/api";
 import SentimentChart from "../components/SentimentChart";
 import { C, card, badge, mono } from "../theme";
+import { BrandContext } from "../context/BrandContext";
 
 const PAGE = { background: C.void, minHeight: "100vh", padding: "44px 56px", animation: "fadeUp .35s ease both" };
 const WINDOWS = [{ label: "1h", val: 1 }, { label: "6h", val: 6 }, { label: "24h", val: 24 }, { label: "7d", val: 168 }];
@@ -18,8 +19,8 @@ export default function Dashboard() {
   const [loading, setLoading]       = useState(true);
   const [bgRefreshing, setBgRefreshing] = useState(false);
 
-  // Keep a per-brand metrics cache so switching brand is instant
-  const metricsCache = useRef({});   // { "Nike:24": metricsObj, ... }
+  // Hook into our global data Context so network payloads survive React unmounts
+  const { metricsCache, globalAlerts, setGlobalAlerts } = useContext(BrandContext);
 
   // ── Fetch brands once ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -28,7 +29,10 @@ export default function Dashboard() {
 
   // ── Poll alerts count (low frequency) ─────────────────────────────────────
   useEffect(() => {
-    const poll = () => getAlerts().then(a => setAlertCount(a.length)).catch(() => {});
+    const poll = () => getAlerts().then(a => {
+        setAlertCount(a.length);
+        setGlobalAlerts(a);
+    }).catch(() => {});
     poll();
     const id = setInterval(poll, 60_000);
     return () => clearInterval(id);

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import { warmCache } from "./services/api.js";
+import { BrandProvider } from "./context/BrandContext.jsx";
 
 // Warm the cache immediately on app start.
 // All 4 brands + competitive + alerts are pre-fetched in the background.
@@ -10,7 +11,9 @@ import { warmCache } from "./services/api.js";
 warmCache();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+  <BrandProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </BrandProvider>
 );
