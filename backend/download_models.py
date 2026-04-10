@@ -3,21 +3,17 @@ import sys
 from huggingface_hub import snapshot_download
 
 def download_huggingface_models():
-    # Read the repository ID from an environment variable (set this in Render)
-    # Example: "Kaviyathamizhan/sentiment-models"
     repo_id = os.environ.get("HF_REPO_ID")
     if not repo_id:
-        print("HF_REPO_ID environment variable is not set. Skipping model download.")
-        return
+        print("CRITICAL BUILD ERROR: HF_REPO_ID environment variable is missing!")
+        sys.exit(1)
 
-    # Download to the root /models directory or inside backend based on where predict.py looks for it
-    # predict.py uses OS path up two directories, so the root repository folder
     dest_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
     
-    print(f"Downloading models from Hugging Face repo: {repo_id}...")
-    try:
-        # If the repository is private, Render needs to have HF_TOKEN environment variable set
-        hf_token = os.environ.get("HF_TOKEN") 
+    print(f"Downloading models from Hugging Face repo: {repo_id} to {dest_dir}...")
+    hf_token = os.environ.get("HF_TOKEN") 
+    if not hf_token:
+        print("WARNING: No HF_TOKEN detected in environment variables. If this repo is private, it will fail.")
         
         snapshot_download(
             repo_id=repo_id,
