@@ -75,6 +75,38 @@ def _load_models():
     )
     _model_root = os.path.join(_drive_root, "models")
 
+    # ── Auto-download from HuggingFace if weights are missing ─────────────────
+    # This is a safety net for Render: if the build-time download failed
+    # (e.g. env vars were added after the build), the server downloads
+    # the weights on first startup instead of crashing.
+    _required_dirs = ["sentiment", "sarcasm", "emotion", "topic"]
+    _missing = [d for d in _required_dirs
+                if not os.path.isdir(os.path.join(_model_root, d))]
+
+    if _missing:
+        hf_repo_id = os.environ.get("HF_REPO_ID")
+        hf_token   = os.environ.get("HF_TOKEN")
+        if hf_repo_id:
+            import logging
+            logging.getLogger("uvicorn").info(
+                f"Model folders missing: {_missing}. "
+                f"Downloading from HuggingFace repo '{hf_repo_id}'..."
+            )
+            from huggingface_hub import snapshot_download
+            snapshot_download(
+                repo_id=hf_repo_id,
+                repo_type="model",
+                local_dir=_model_root,
+                local_dir_use_symlinks=False,
+                token=hf_token,
+            )
+            logging.getLogger("uvicorn").info("HuggingFace download complete.")
+        else:
+            raise RuntimeError(
+                f"Model folders {_missing} not found locally and "
+                "HF_REPO_ID env var is not set. Cannot load models."
+            )
+
     _sentiment_model = SentimentModel.load(os.path.join(_model_root, "sentiment"))
     _sarcasm_model   = SarcasmModel.load(os.path.join(_model_root, "sarcasm"))
     _emotion_model   = EmotionModel.load(os.path.join(_model_root, "emotion"))
